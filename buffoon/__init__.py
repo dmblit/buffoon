@@ -8,7 +8,10 @@ from flask.ext.mongoengine import MongoEngine
 
 app = flask.Flask(__name__)
 app.config['SECRET_KEY'] = 'qwerty'
-app.config['MONGODB_DB'] = os.environ.get('MONGOHQ_URL', 'buffoon_game')
+app.config['MONGODB_SETTINGS'] = {
+    'db': 'buffoon_game',
+    'host': os.environ.get('MONGOHQ_URL', 'mongodb://localhost:27017/buffoon_game')
+}
 
 db = MongoEngine(app)
 
