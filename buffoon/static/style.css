@@ -1,0 +1,33 @@
+body {width: 60%; margin:auto;}
+div#maincontent {min-height: 100%}
+#loginform {text-align:center}
+h1,h2,h3,h4,h5,h6 {text-align:center}
+ul.menu-bar {
+    list-style-type:none;
+    margin:0;
+    padding:0;
+}
+ul.menu-bar li {
+    display:inline;
+}
+
+div#navigation-bar {
+    float: left;
+}
+
+div#profile-bar {
+    float: right;
+}
+
+hr {
+    clear: both;
+    background-color: red;
+}
+
+td.form-button {
+    text-align:center;
+}
+
+form {
+    left: 40%;
+}

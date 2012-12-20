@@ -1,0 +1,15 @@
+{% extends "template.html" %}
+
+{% block head %}
+    <meta http-equiv="refresh" content="1" />
+{% endblock %}
+
+{% block body %}
+    Ожидаем {{state.playerstostart}} игроков для начала.
+    <table>
+        <tr> <th> Подключившиеся игроки: </th> <tr>
+        {% for player in state.players %}
+            <tr> <td> {{ player }} </tr> </td>
+        {% endfor %}
+    </table>
+{% endblock %}

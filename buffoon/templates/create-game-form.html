@@ -1,0 +1,23 @@
+{% extends "template.html" %}
+{% block body %}
+
+<form action="{{url_for('create_game')}}" method="post">
+    <table>
+        <tr>
+            <th colspan=2>
+                Создать игру
+            </th>
+        </tr>
+        <tr>
+            <td> Количество игроков: </td> 
+            <td> <input type="number" name="players"> </td>
+        </tr>
+        <tr>
+            <td colspan=2 class="form-button">
+                <input type="submit" value="Да!">
+            </td>
+        </tr>
+    </table>
+</form>
+
+{% endblock %}

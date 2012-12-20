@@ -1,0 +1,21 @@
+{% extends "template.html" %}
+{% block body %}
+
+<form action="" method="post" id="loginform">
+    <table clas="form">
+        <tr>
+            <td>
+                Имя:
+            </td>
+            <td>
+                <input type=text name=playername value="{{request.form.username}}"> <br>
+            </td>
+    </tr>
+    <tr>
+        <td colspan="2" class="form-button">
+            <input type=submit value="Да!">
+        </td>
+    </tr>
+    </table>
+</form>
+{% endblock %}
