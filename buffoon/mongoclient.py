@@ -19,11 +19,13 @@ class BuffoonGame(object):
                  deckfactory=gamecore.shuffled_cards):
         self.allowedwords = allowedwords
         self.deckfactory = deckfactory
+        self.maxidletime = datetime.timedelta(minutes=15)
 
     def creategame(self, player, minplayercount=2):
         if not isinstance(player, (str, unicode)):
             player = player.playername
         self._maintain()
+        self.leavegame(player)
 
         game = Game()
         game.settings.playercount = minplayercount
@@ -44,6 +46,8 @@ class BuffoonGame(object):
         if not isinstance(player, (str, unicode)):
             player = player.playername
         self._maintain()
+        self.leavegame(player)
+
         game = Game.objects(id=gameid).first()
         if game is not None:
             game.addplayer(player)
@@ -54,7 +58,9 @@ class BuffoonGame(object):
     def joinorcreategame(self, player, **kwargs):
         if not isinstance(player, (str, unicode)):
             player = player.playername
+        self._maintain()
         self.leavegame(player)
+
         gamelist = self.listgames(player)['gamelist']
         for gamestate in gamelist:
             try:
@@ -112,9 +118,15 @@ class BuffoonGame(object):
             raise gamecore.GameConnectionError()
         return game
 
-    @staticmethod
-    def _maintain():
+    def _maintain(self, now=None):
+        if now is None:
+            now = datetime.datetime.now()
         Game.objects(Q(players__size=0) | Q(state='gameover')).delete()
+        keepthreshold = now - self.maxidletime
+        Game.objects(Q(state='waiting') &
+                     Q(createtime__lte=keepthreshold)).delete()
+        Game.objects(Q(state__ne='waiting') &
+                     Q(firstround_starttime__lte=keepthreshold)).delete()
         
 
 # Game server that stores its state in mongo db instance.
@@ -228,7 +240,7 @@ class Game(db.Document):
     @_atomic
     def attempt(self, player, word):
         if not self.isround():
-            raise gamecore.BadWordError(word)
+            raise gamecore.WrongStateError
         score = gamecore.wordscore(self._curcards(), word)
         self._curround().saveattempt(player, word, score)
 
