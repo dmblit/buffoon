@@ -275,7 +275,9 @@ class Game(db.Document):
                 ret['lastattempt'] = fromattempt(lastattempt)
                 bestattempt = self._curround().bestattempt(player)
                 ret['bestattempt'] = fromattempt(bestattempt)
+                ret['secondstotal'] = self.settings.roundseconds
             else:
+                ret['secondstotal'] = self.settings.restseconds
                 ret['usedwords'] = [
                     [player, fromattempt(self._curround().chosenattempt(player))]
                     for player in self.players]
