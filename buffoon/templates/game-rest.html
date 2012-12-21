@@ -1,48 +1,35 @@
-{% extends "template.html" %}
+{% extends "base-game.html" %}
 
-{% block body %}
+{% block headline %}
 
-Закончился {{ state.curround }} раунд.
-<table border=0 width=50%>
-    <tr>
-        <th colspan=2>
-            Текущий счёт:
-        </th>
-    </tr>
-    <tr>
-        {% for score in state.totalscore %}
-        <th>
-            {{ score[0] }}
-        </th>
-        <td>
-            {{ score[1] }}
-        </td>
+{% if state.state == 'rest' %}
+<h2>Раунд <span id='curround'> {{state.curround}} </span> результаты</h2>
+{% else %}
+<h2> Игра окончена </h2>
+{% endif %}
+
+{% endblock %}
+
+{% block stage %}
+
+<table class="table">
+    <tbody>
+        <tr> 
+            <th> Игрок </th>
+            <th> Слово </th>
+            <th> Счёт </th>
+        </tr>
+        {% for player, attempt in state.usedwords %}
+        <tr>
+            <td> {{ player }} </td>
+            <td> {{ attempt.word }} </td>
+            <td> {{ attempt.score }} </td>
+        </tr>
         {% endfor %}
-    </tr>
-</table>
-
-<table border=0 width=50%>
-    <tr>
-        <th colspan=3>
-            Использованные слова
-        </th>
-    </tr>
-    {% for entry in state.usedwords %}
-    <tr>
-        <th>
-            {{ entry[0] }}
-        </th>
-        <td>
-            {{ entry[1].word }} ( {{ entry[1].score }} )
-        </td>
-    </tr>
-    {% endfor %}
+    </tbody>
 </table>
 
 {% if state.state == 'rest': %}
-    До начала следующего раунда осталось
-    <span id="secondsremains"> {{state.secondsremains}} </span> секунд.
-
     <script type=text/javascript>
         $(window.setInterval(
                     function() {

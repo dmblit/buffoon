@@ -1,0 +1,40 @@
+{% extends "template.html" %}
+{% block body %}
+
+    <div class="row">
+        <div class="span9">
+            {% block headline %}
+            {% endblock %}
+
+            {% if 'secondsremains' in state %}
+
+            <div class="progress">
+                <div class="bar" id="timeremainsbar"
+                    style="width: {{ state.secondsremains * 100 / state.secondstotal }}%;">
+                </div>
+            </div>
+
+            {% endif %}
+
+            {% block stage %}
+            {% endblock %}
+        </div>
+        <div class="span3 pull-right">
+            <table class="table"> <tbody>
+                <tr> <th> Игрок </th> <th> Общий Счёт </th> </tr>
+                {% for player,score in state.totalscore %}
+                <tr>
+                    <td>
+                        {{ player }}
+                    </td>
+                    <td>
+                        {{ score }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody> </table>
+        </div>
+    </div>
+
+{% endblock %}
+

@@ -1,59 +1,71 @@
-{% extends "template.html" %}
+{% extends "base-game.html" %}
 
-{% block body %}
-<table border=0 width=50%>
-    <tr>
-        {% for player in state.players %}
-        <td>
-            {{ player }}
-        </td>
-        {% endfor %}
-    </tr>
-</table>
+{% block head %}
 
-До завершения <span id='curround'> ?? </span> раунда
-осталось <span id='secondsremains'> ?? </span> секунд. <br>
+<style type="text/css">
+    canvas {
+        border-radius: 5px;
+        -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.05);
+        -moz-box-shadow: 0 1px 2px rgba(0,0,0,.05);
+        -webkit-border-radius: 5px;
+        -moz-border-radius: 5px;
+        box-shadow: 0 1px 2px rgba(0,0,0,.05);
+    }
+</style>
 
-{% for card in state.cards %}
-<canvas id="card-{{loop.index}}" width="100" height="100" style="border:1px solid #d3d3d3;">
-default
-</canvas>
-<script type=text/javascript>
-    $(drawCard(document.getElementById("card-{{loop.index}}"), "{{card.letter | upper}}", {{card.score}}));
-</script>
-{% endfor %}
+{% endblock %}
 
-<form id="attempt" action="javascript:sendRoundAttempt();">
-    <dl>
-        <dt>Ваше слово:
-        <dd>
+{% block headline %}
+<h2>Раунд <span id='curround'> {{state.curround}} </span> </h2>
+{% endblock %}
+
+{% block stage %}
+
+<div style="text-align: center">
+    {% for card in state.cards %}
+    <canvas id="card-{{loop.index}}" width="100" height="100" style="border:1px solid #d3d3d3;">
+    default
+    </canvas>
+    {% if loop.index == 4 %}
+    <br>
+    {% endif %}
+    <script type=text/javascript>
+        $(drawCard(document.getElementById("card-{{loop.index}}"), "{{card.letter | upper}}", {{card.score}}));
+    </script>
+    {% endfor %}
+
+    <form id="attempt" action="javascript:sendRoundAttempt();" class="form-inline">
+        <fieldset>
             <input type=text name=word>
             <input type=submit value="Послать">
-            <span id="error"></span>
-        </dd>
-    </dl>
-    <p>
-</form>
+        </fieldset>
+    </form>
+    <div class="alert alert-error invisible" id="error">  
+        <br>
+    </div>
 
-<table>
-    <tr>
-        <td> Последняя попытка: </td>
-        <td> <span id="lastattempt_word"> ?? </span> </td>
-        <td> (<span id="lastattempt_score"> ?? </span>) </td>
-    </tr>
-    <tr>
-        <td> Лучшая попытка: </td>
-        <td> <span id="bestattempt_word"> ?? </span> </td>
-        <td> (<span id="bestattempt_score"> ?? </span>) </td>
-    </tr>
-</table>
+    <table class="table">
+        <tr> <th></th> <th> Слово </th> <th> Счёт </th> <tr>
+                <tr>
+                    <th> Последняя попытка: </th>
+                    <td> <span id="lastattempt_word"> ?? </span> </td>
+                    <td> <span id="lastattempt_score"> ?? </span> </td>
+                </tr>
+                <tr>
+                    <th> Лучшая попытка: </th>
+                    <td> <span id="bestattempt_word"> ?? </span> </td>
+                    <td> <span id="bestattempt_score"> ?? </span> </td>
+                </tr>
+            </table>
 
 
-<script type=text/javascript>
-    $(window.setInterval(
-                function() {
-                $.getJSON($SCRIPT_ROOT + "/json/getgamestate", onRoundReply);
-                }, 500));
-</script>
+            <script type=text/javascript>
+                $(window.setInterval(
+                            function() {
+                            $.getJSON($SCRIPT_ROOT + "/json/getgamestate", onRoundReply);
+                            }, 500));
+                        </script>
+
+</div>
 
 {% endblock %}

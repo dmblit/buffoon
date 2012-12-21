@@ -2,7 +2,8 @@
 <html>
     <head>
         <title> Фигляр это 15 </title>
-        <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}">
+        <!--<link rel="stylesheet" href="{{url_for('static', filename='style.css')}}">-->
+        <link rel="stylesheet" href="{{url_for('static', filename='bootstrap.min.css')}}">
         <script type=text/javascript>
             $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
         </script>
@@ -10,42 +11,44 @@
         </script>
         <script type=text/javascript src="{{url_for('static', filename='buffoon.js')}}">
         </script>
+        <meta charset="utf-8">
         {% block head %}
         {% endblock %}
     </head>
 
     <body>
-        <div class="top-bar">
-            <div id="navigation-bar">
-                <ul class="menu-bar">
-                    <li> <a href="{{url_for('main_page')}}"> Главная </a> </li>
+        <div class="navbar">
+            <div class="navbar-inner">
+                <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="brand" href="{{url_for('main_page')}}"> Фигляр это 15 </a>
+                <ul class="nav">
+                    <li> <a href="{{url_for('main_page')}}"> Правила </a> </li>
                     {% if 'playername' in session %}
                     <li> <a href="{{url_for('quickstart_game')}}">Быстрый старт</a> </li>
                     <li> <a href="{{url_for('create_game', players=1)}}"> Тренировочная игра </a> </li>
                     <li> <a href="{{url_for('create_game_form')}}"> Создать игрy </a> </li>
                     {% endif %}
                 </ul>
-            </div>
 
-            <div id="profile-bar">
-                <ul class="menu-bar">
+                <ul class="nav pull-right">
                     {% if 'playername' in session %}
-                    <li> {{session['playername']}} </li>
+                    <li> <a> {{session['playername']}} </a> </li>
                     <li> <a href="{{url_for('logout')}}"> Выйти </a> </li>
                     {% else %}
                     <li> <a href="{{ url_for('login') }}">Представиться</a> </li>
                     {% endif %}
                 </ul>
             </div>
-            <hr>
         </div>
 
-        <div id="maincontent">
-        {% block body %}{% endblock %}
+        <div class="container">
+            {% block body %}{% endblock %}
         </div>
 
-        <div class="bottom-bar">
-            <hr>
-        </div>
+        <hr>
     </body>
 </html>

@@ -1,15 +1,28 @@
-{% extends "template.html" %}
+{% extends "base-game.html" %}
 
 {% block head %}
-    <meta http-equiv="refresh" content="1" />
+    <!--<meta http-equiv="refresh" content="1" />-->
 {% endblock %}
 
-{% block body %}
-    Ожидаем {{state.playerstostart}} игроков для начала.
-    <table>
-        <tr> <th> Подключившиеся игроки: </th> <tr>
+{% block headline %}
+<h3>Ожидание</h3>
+{% endblock %}
+
+{% block stage %}
+    <table class="table table-bordered" id="connected-players">
+        <tr> <th> Подключившиеся игроки </th> </tr>
         {% for player in state.players %}
             <tr> <td> {{ player }} </tr> </td>
         {% endfor %}
+        {% for i in range(state.playerstostart) %}
+            <tr> <td> - </tr> </td>
+        {% endfor %}
     </table>
+    <script type=text/javascript>
+        $(window.setInterval(
+                    function() {
+                    $.getJSON($SCRIPT_ROOT + "/json/getgamestate", onWaitReply);
+                    }, 500));
+</script>
+
 {% endblock %}

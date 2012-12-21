@@ -1,21 +1,38 @@
 {% extends "template.html" %}
+
+{% block head %}
+
+<style type="text/css">
+    .content {
+        padding-top: 40px;
+        padding-bottom: 40px;
+        background-color: #f5f5f5;
+    }
+
+    .form-signin {
+        max-width: 300px;
+        padding: 19px 29px 29px;
+        margin: 0 auto 20px;
+        background-color: #fafafa;
+        border: 1px solid #e5e5e5;
+        border-radius: 5px;
+        -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.05);
+        -moz-box-shadow: 0 1px 2px rgba(0,0,0,.05);
+        -webkit-border-radius: 5px;
+        -moz-border-radius: 5px;
+        box-shadow: 0 1px 2px rgba(0,0,0,.05);
+    }
+</style>
+
+{% endblock %}
+
+
 {% block body %}
 
-<form action="" method="post" id="loginform">
-    <table clas="form">
-        <tr>
-            <td>
-                Имя:
-            </td>
-            <td>
-                <input type=text name=playername value="{{request.form.username}}"> <br>
-            </td>
-    </tr>
-    <tr>
-        <td colspan="2" class="form-button">
-            <input type=submit value="Да!">
-        </td>
-    </tr>
-    </table>
+<form class="form-signin" action="" method="post">
+    <h3 class="form-signin-heading">Представьтесь</h3>
+    <input type="text" name="playername" class="input-block-level" placeholder="Имя">
+    <button class="btn btn-primary" type="submit">Да!</button>
 </form>
+
 {% endblock %}
