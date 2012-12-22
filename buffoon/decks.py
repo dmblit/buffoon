@@ -21,7 +21,7 @@ DECKS = [
         Card(u'д', 4),
         Card(u'в', 3),
         Card(u'о', 2),
-        Card(u'т', 3),
+        Card(u'т', 2),
     ], [
         Card(u'д', 4),
         Card(u'п', 4),
