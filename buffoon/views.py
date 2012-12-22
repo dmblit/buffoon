@@ -53,6 +53,16 @@ def logout():
             del flask.session[key]
     return flask.redirect(flask.url_for('main_page'))
 
+@app.route('/list')
+def listofgames():
+    if 'playerid' not in flask.session:
+        return flask.redirect(flask.url_for('main_page'))
+    res = gameserver.listgames(getplayer())
+    if not res['gamelist']:
+        return flask.render_template('game-list-no-games.html')
+    else:
+        return flask.render_template('game-list.html', gamelist = res['gamelist'])
+
 @app.route('/action/quickstart')
 def quickstart_game():
     gameserver.joinorcreategame(getplayer())
@@ -63,6 +73,7 @@ def create_game():
     players = int(flask.request.values.get('players', 2))
     gameserver.creategame(getplayer(), minplayercount=players)
     return flask.redirect(flask.url_for('game'))
+
 
 @app.route('/game')
 def game():
@@ -84,12 +95,27 @@ def game():
     except (GameError, FatalGameError):
         return flask.redirect(flask.url_for('main_page'))
 
+
 @app.route('/json/getgamestate')
 def getgamestate():
     if 'playerid' not in flask.session:
         return flask.redirect(flask.url_for('main_page'))
     reply = gameserver.getstate(getplayer())
     return flask.jsonify(reply)
+
+@app.route('/json/joingame', methods=['GET', 'POST'])
+def joingame():
+    if 'playerid' not in flask.session:
+        return flask.redirect(flask.url_for('main_page'))
+    if 'gameid' not in flask.request.args:
+        return flask.jsonify({'status': 'error',
+                              'reason': 'no gameid'})
+    try:
+        gameserver.joingame(getplayer(), flask.request.args['gameid'])
+        return flask.jsonify({'status': 'ok'})
+    except (gamecore.GameError, gamecore.FatalGameError) as e:
+        return flask.jsonify({'status': 'error',
+                              'reason': unicode(e)})
 
 @app.route('/json/attempt')
 def attempt():
@@ -119,11 +145,8 @@ def choose():
             reason=unicode(e)
         )
 
-
-
 @app.route('/create')
 def create_game_form():
     if 'playerid' not in flask.session:
         return flask.redirect(flask.url_for('main_page'))
     return flask.render_template('create-game-form.html')
-

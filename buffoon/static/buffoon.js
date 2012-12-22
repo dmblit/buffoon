@@ -103,3 +103,14 @@ var updateWaitingPlayers = function(players) {
 var chooseWord = function(word) {
     $.getJSON($SCRIPT_ROOT + "/json/choose", {'word': word}, onChoosingReply);
 }
+
+
+var joinGame = function(gameId, successUrl) {
+    var onJoinGameReply = function(reply) {
+        if (reply.status === 'ok') {
+            location.href = successUrl;
+        }
+    }
+    $.getJSON($SCRIPT_ROOT + "/json/joingame", {'gameid': gameId}, onJoinGameReply);
+}
+

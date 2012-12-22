@@ -1,0 +1,8 @@
+{% extends "base-info.html" %}
+
+{% block content %}
+    <div class="span9">
+        Нет созданных игр.
+        Быть может <a href="{{url_for('create_game_form')}}">создать</a> новую.
+    </div>
+{% endblock %}

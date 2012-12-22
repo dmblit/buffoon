@@ -1,0 +1,25 @@
+{% extends "base-info.html" %} {% block content %}
+<div class="content">
+    <div class="span9">
+        <table class="table table-bordered">
+            <tr>
+                <th> Подключившиеся Игроки </th>
+                <th> Число Игроков</th>
+                <th> Свободные Места </th>
+                <th> </th>
+            </tr>
+            {% for game in gamelist %}
+            <tr>
+                <td> {{game.players | join(', ') }} </td>
+                <td> {{ game.playerstostart + game.players | length }} </td>
+                <td> {{ game.playerstostart }} </td>
+                <td>
+                    <a href="javascript:joinGame(
+                        '{{game.gameid}}', '{{url_for('game')}}')"> Подключиться </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+{% endblock %}
