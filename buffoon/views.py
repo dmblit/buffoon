@@ -76,6 +76,8 @@ def game():
             return flask.render_template('game-round.html', state=state)
         elif state['state'] == 'rest':
             return flask.render_template('game-rest.html', state=state)
+        elif state['state'] == 'choosing':
+            return flask.render_template('game-choosing.html', state=state)
         elif state['state'] == 'gameover':
             return flask.render_template('game-rest.html', state=state)
         return flask.render_template('game.html')
@@ -95,8 +97,6 @@ def attempt():
         return flask.jsonify({'reason': 'no word'})
     word = flask.request.args['word']
     try:
-        if 'playerid' not in flask.session:
-            return flask.redirect(flask.url_for('main_page'))
         state = gameserver.attempt(getplayer(), word.lower())
         return flask.jsonify(status='ok', **state)
     except GameError as e:
@@ -104,6 +104,22 @@ def attempt():
             status='error',
             reason=unicode(e)
         )
+
+@app.route('/json/choose')
+def choose():
+    if 'word' not in flask.request.args:
+        return flask.jsonify({'reason': 'no word'})
+    word = flask.request.args['word']
+    try:
+        state = gameserver.choose(getplayer(), word.lower())
+        return flask.jsonify(status='ok', **state)
+    except GameError as e:
+        return flask.jsonify(
+            status='error',
+            reason=unicode(e)
+        )
+
+
 
 @app.route('/create')
 def create_game_form():

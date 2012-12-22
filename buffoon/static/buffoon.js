@@ -76,6 +76,20 @@ var onWaitReply = function(reply) {
     updateWaitingPlayers(reply.players);
 }
 
+var onChoosingReply = function(reply) {
+    if (reply.state != null && reply.state != 'choosing') {
+        location.reload(true);
+    }
+    updateTimer(reply.secondstotal, reply.secondsremains);
+    if (reply.status === 'ok' && reply.chosenattempt && reply.chosenattempt.word) {
+        $("tr.attempt").removeClass("success");
+        $("tr.attempt td").filter(
+                function() {
+                    return $.trim($(this).text()) === reply.chosenattempt.word;
+                }).parent().addClass("success");
+    }
+}
+
 var updateWaitingPlayers = function(players) {
     $("#connected-players tr td").each(function(i, td) {
         if (i < players.length) {
@@ -85,3 +99,7 @@ var updateWaitingPlayers = function(players) {
         }
     });
 };
+
+var chooseWord = function(word) {
+    $.getJSON($SCRIPT_ROOT + "/json/choose", {'word': word}, onChoosingReply);
+}
