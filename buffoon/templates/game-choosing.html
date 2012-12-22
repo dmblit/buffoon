@@ -1,0 +1,35 @@
+{% extends "base-game.html" %}
+
+{% block headline %}
+
+<h2> Выберите окончательное слово </h2>
+
+{% endblock %}
+
+{% block stage %}
+
+<table class="table">
+    <tr>
+        <th> Слово </th>
+        <th> Очки </th>
+        <th> </th>
+    </tr>
+    {% for attempt in state.roundattempts %}
+    <tr class="attempt">
+        <td> {{attempt.word}} </td>
+        <td> {{attempt.score}} </td>
+        <td>
+            <a href="javascript:chooseWord('{{attempt.word}}')"> Выбрать </a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+<script type=text/javascript>
+    $(window.setInterval(
+                function() {
+                $.getJSON($SCRIPT_ROOT + "/json/getgamestate", onChoosingReply);
+                }, 500));
+</script>
+
+{% endblock %}

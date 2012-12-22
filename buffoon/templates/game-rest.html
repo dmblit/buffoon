@@ -23,7 +23,12 @@
         <tr>
             <td> {{ player }} </td>
             <td> {{ attempt.word }} </td>
-            <td> {{ attempt.score }} </td>
+            <td>
+                {{ attempt.finalscore }}
+                {% if attempt.finalscore != attempt.score %}
+                ({{attempt.score}})
+                {% endif %}
+            </td>
         </tr>
         {% endfor %}
     </tbody>

@@ -25,7 +25,7 @@ class TestGameCore(unittest.TestCase):
             gamecore.roundscore(
                 [('p', 4), ('a', 3), ('p', 4)],
                 ["popa", "popa", "pop"]),
-            [("popa", 6), ("popa", 6), ("pop", 5)])
+            [6, 6, 5])
 
 if __name__ == '__main__':
     unittest.main()

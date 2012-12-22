@@ -31,7 +31,7 @@ def roundscore(cards, words):
         score = wordscore(cards, word) - (wordcount[word] - 1)
         if score < 0:
             score = 0
-        result.append((word, score))
+        result.append(score)
     return result
 
 def shuffled_cards():
@@ -55,6 +55,10 @@ class WrongStateError(GameError):
 class BadWordError(GameError):
     def __init__(self, word):
         GameError.__init__(self, u"Слова '{word}' не существует.".format(word=word))
+
+class BadChoiceError(GameError):
+    pass
+
 
 class FatalGameError(Exception):
     pass

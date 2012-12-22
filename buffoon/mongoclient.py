@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import datetime
+from itertools import izip
 import logging
-
+import random
 
 from mongoengine import Q
 
@@ -12,7 +13,8 @@ import decks
 from buffoon import db
 
 ROUND_TIME = 45
-REST_TIME = 15
+CHOOSING_TIME = 10
+REST_TIME = 10
 
 class BuffoonGame(object):
     def __init__(self, allowedwords=frozenset(),
@@ -141,6 +143,8 @@ class GameSettings(db.EmbeddedDocument):
     # how long rest between rounds will last
     restseconds = db.IntField(required=True)
 
+    choosingseconds = db.IntField(required=True, default=lambda: 0)
+
     def __unicode__(self):
         return u'<GameSettings: players: {0}>'.format(self.playercount)
 
@@ -150,8 +154,11 @@ class GameSettings(db.EmbeddedDocument):
     def restdelta(self):
         return datetime.timedelta(seconds=self.restseconds)
 
+    def choosingdelta(self):
+        return datetime.timedelta(seconds=self.choosingseconds)
+
     def fullrounddelta(self):
-        return self.rounddelta() + self.restdelta()
+        return self.rounddelta() + self.choosingdelta() + self.restdelta()
 
 def _replace(query, obj):
     replace_dict = {}
@@ -193,7 +200,10 @@ class Game(db.Document):
     # settings of the game set at game start
     settings = db.EmbeddedDocumentField(
         'GameSettings', required=True,
-        default=lambda:GameSettings(playercount=2, roundseconds=45, restseconds=15))
+        default=lambda:GameSettings(playercount=2,
+                                    roundseconds=ROUND_TIME,
+                                    restseconds=REST_TIME,
+                                    choosingseconds=CHOOSING_TIME))
 
     # players that are currently in the game
     players = db.ListField(db.StringField(), default=[])
@@ -235,7 +245,9 @@ class Game(db.Document):
 
     @_atomic
     def choose(self, player, word):
-        raise NotImplementedError
+        if not self.ischoosing():
+            raise gamecore.WrongStateError
+        self._curround().choose(player, word)
 
     @_atomic
     def attempt(self, player, word):
@@ -253,7 +265,9 @@ class Game(db.Document):
 
     def getstate(self, player, now=None):
         def fromattempt(attempt):
-            return {'word': attempt.word, 'score': attempt.score}
+            return {'word': attempt.word, 'score': attempt.score,
+                    'finalscore': attempt.finalscore}
+
         if now is None:
             now = datetime.datetime.now()
 
@@ -265,7 +279,7 @@ class Game(db.Document):
 
         if self.iswaiting():
             ret['playerstostart'] = self.settings.playercount - len(self.players)
-        elif self.isround() or self.isrest():
+        elif self.isround() or self.isrest() or self.ischoosing():
             ret['curround'] = self._curroundindex() + 1
             ret['secondsremains'] = int(self._secondsremains(now))
             ret['totalscore'] = self._scorelist()
@@ -276,11 +290,19 @@ class Game(db.Document):
                 bestattempt = self._curround().bestattempt(player)
                 ret['bestattempt'] = fromattempt(bestattempt)
                 ret['secondstotal'] = self.settings.roundseconds
-            else:
+            elif self.isrest():
                 ret['secondstotal'] = self.settings.restseconds
                 ret['usedwords'] = [
-                    [player, fromattempt(self._curround().chosenattempt(player))]
-                    for player in self.players]
+                    [player, fromattempt(self._curround().chosenattempt(p))]
+                    for p in self.players]
+            elif self.ischoosing():
+                ret['secondstotal'] = self.settings.choosingseconds
+                ret['roundattempts'] = [fromattempt(attempt)
+                                         for attempt in self._curattempts(player)]
+                ret['chosenattempt'] = fromattempt(
+                    self._curround().chosenattempt(player))
+            else:
+                raise AssertionError, "WTF?"
         elif self.isover():
             ret['totalscore'] = self._scorelist()
             ret['usedwords'] = [
@@ -302,6 +324,9 @@ class Game(db.Document):
     def isover(self):
         return self.state == 'gameover'
 
+    def ischoosing(self):
+        return self.state == 'choosing'
+
     def empty(self):
         return not self.players
 
@@ -311,6 +336,9 @@ class Game(db.Document):
                 self._newround(now)
                 return True
         elif self.isround():
+            if not self._secondsremains(now):
+                self.state = 'choosing'
+        elif self.ischoosing():
             if not self._secondsremains(now):
                 self._finishround()
                 if self._curroundindex() + 1 < self._totalrounds():
@@ -338,8 +366,20 @@ class Game(db.Document):
             self.firstround_starttime = now
 
     def _finishround(self):
+        curround = self._curround()
+        words = []
         for player in self.players:
-            chosenattempt = self._curround().chosenattempt(player)
+            if not curround.haschosen(player):
+                curround.chosedefault(player)
+            words.append(curround.chosenattempt(player).word)
+        scores = gamecore.roundscore(self._curcards(), words)
+        scores = dict(izip(words, scores))
+        for player in self.players:
+            chosenattempt = curround.chosenattempt(player)
+            chosenattempt.finalscore = scores[chosenattempt.word]
+
+        for player in self.players:
+            chosenattempt = curround.chosenattempt(player)
             self.totalscore[player] += chosenattempt.score
 
     def _newrest(self):
@@ -360,6 +400,11 @@ class Game(db.Document):
         if self.isround():
             endtime = (
                 self.firstround_starttime + self.settings.rounddelta() +
+                self._curroundindex() * (self.settings.fullrounddelta()))
+        elif self.ischoosing():
+            endtime = (
+                self.firstround_starttime + self.settings.rounddelta() +
+                + self.settings.choosingdelta() +
                 self._curroundindex() * (self.settings.fullrounddelta()))
         elif self.isrest():
             endtime = (self.firstround_starttime +
@@ -384,6 +429,9 @@ class Game(db.Document):
         return [decks.Card(card.letter, score=card.score)
                 for card in self.cards[self._curroundindex()]]
 
+    def _curattempts(self, player):
+        return self._curround().attempts.get(player, [])
+
 class GameCard(db.EmbeddedDocument):
     letter = db.StringField(max_length=1, min_length=1)
     score = db.IntField()
@@ -391,14 +439,21 @@ class GameCard(db.EmbeddedDocument):
     def __unicode__(self):
         return u'<Card: letter: {0} score: {1}>'.format(self.letter, self.score)
 
-
 class GameRound(db.EmbeddedDocument):
     attempts = db.MapField(db.ListField(db.EmbeddedDocumentField('Attempt')),
                            default=dict)
 
+    chosen = db.MapField(db.EmbeddedDocumentField('Attempt'), default=dict)
+
     def saveattempt(self, player, word, score):
-        self.attempts.setdefault(player, [])
-        self.attempts[player].append(Attempt(word=word, score=score))
+        # TODO: проверять, что список не слишком длинный
+        lst = self.attempts.setdefault(player, [])
+        if all(a.word != word for a in lst):
+            a = Attempt(word=word, score=score)
+            if len(lst) >= 100:
+                lst[-1] = a
+            else:
+                lst.append(a)
 
     def lastattempt(self, player):
         playerattempts = self.attempts.get(player, None)
@@ -412,12 +467,42 @@ class GameRound(db.EmbeddedDocument):
             return Attempt(word='', score=0)
         return max(playerattempts, key=lambda a: a.score)
 
-    chosenattempt = bestattempt
+    def chosenattempt(self, player):
+        try:
+            return self.chosen[player]
+        except KeyError:
+            return self.bestattempt(player)
+
+    def haschosen(self, player):
+        return player in self.chosen
+
+    def chosedefault(self, player):
+        """Chose random word among words with high score."""
+        assert player not in self.chosen
+        bestattempt = self.bestattempt(player)
+
+        if bestattempt.score == 0:
+            self.chosen[player] = self.bestattempt(player)
+            return
+            
+        allthebest = [a for a in self.attempts.get(player, ())
+                      if a.score == bestattempt.score]
+        self.chosen[player] = random.choice(allthebest)
+
+    def choose(self, player, word):
+        playerattempts = self.attempts.get(player, ())
+        for attempt in playerattempts:
+            if attempt.word == word:
+                self.chosen[player] = attempt
+                break
+        else:
+            raise gamecore.BadChoiceError
 
 
 class Attempt(db.EmbeddedDocument):
     word = db.StringField(required=True)
     score = db.IntField(required=True)
+    finalscore = db.IntField()
 
     def __unicode__(self):
         return u'<Attempt: word: {0} score: {1}>'.format(self.word, self.score)
