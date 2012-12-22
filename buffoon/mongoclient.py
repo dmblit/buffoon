@@ -75,6 +75,7 @@ class BuffoonGame(object):
         if not isinstance(player, (str, unicode)):
             player = player.playername
         gamelist = []
+        self._maintain()
         for game in Game.objects(state='waiting'):
             game.updatestate()
             if game.iswaiting():
@@ -293,12 +294,14 @@ class Game(db.Document):
             elif self.isrest():
                 ret['secondstotal'] = self.settings.restseconds
                 ret['usedwords'] = [
-                    [player, fromattempt(self._curround().chosenattempt(p))]
+                    [p, fromattempt(self._curround().chosenattempt(p))]
                     for p in self.players]
             elif self.ischoosing():
                 ret['secondstotal'] = self.settings.choosingseconds
                 ret['roundattempts'] = [fromattempt(attempt)
-                                         for attempt in self._curattempts(player)]
+                                        for attempt in sorted(self._curattempts(player),
+                                                              key=lambda x: x.score,
+                                                              reverse=True)]
                 ret['chosenattempt'] = fromattempt(
                     self._curround().chosenattempt(player))
             else:
