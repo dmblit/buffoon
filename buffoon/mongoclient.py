@@ -48,10 +48,14 @@ class BuffoonGame(object):
         for __ in xrange(aicount):
             ainame = None
             while not ainame or game.hasplayer(ainame):
-                ainame = ai.generate_name()
+                gender = random.choice(('male', 'female'))
+                ainame = ai.generate_name(gender)
+                print ainame
             attemptlst = []
+            cls = {'male': ai.Vasiliy, 'female': ai.Fekla}[gender]
+            aiplayer = cls(self.allowedwords)
             for roundcards in curdeck:
-                word = ai.roundattempt(roundcards, self.allowedwords)
+                word = aiplayer.roundattempt(roundcards)
                 attemptlst.append(word)
             game.aiattempts[ainame] = attemptlst
             game.addplayer(ainame)
