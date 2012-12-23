@@ -71,7 +71,7 @@ def quickstart_game():
 
 @app.route('/action/create', methods=['GET', 'POST'])
 def create_game():
-    humanplayers = int(flask.request.values.get('players', 1))
+    humanplayers = int(flask.request.values.get('humanplayers', 1))
     try:
         aiplayers = int(flask.request.values.get('aiplayers', 0))
     except ValueError:
