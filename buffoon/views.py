@@ -68,10 +68,19 @@ def quickstart_game():
     gameserver.joinorcreategame(getplayer())
     return flask.redirect(flask.url_for('game'))
 
+
 @app.route('/action/create', methods=['GET', 'POST'])
 def create_game():
-    players = int(flask.request.values.get('players', 2))
-    gameserver.creategame(getplayer(), minplayercount=players)
+    humanplayers = int(flask.request.values.get('players', 1))
+    try:
+        aiplayers = int(flask.request.values.get('aiplayers', 0))
+    except ValueError:
+        aiplayers = 0
+
+    totalplayers = humanplayers + aiplayers
+    
+    gameserver.creategame(getplayer(), minplayercount=totalplayers,
+                          aicount=aiplayers)
     return flask.redirect(flask.url_for('game'))
 
 

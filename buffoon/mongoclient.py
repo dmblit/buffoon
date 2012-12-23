@@ -8,6 +8,7 @@ import random
 
 from mongoengine import Q
 
+import ai
 import gamecore
 import decks
 from buffoon import db
@@ -23,9 +24,12 @@ class BuffoonGame(object):
         self.deckfactory = deckfactory
         self.maxidletime = datetime.timedelta(minutes=15)
 
-    def creategame(self, player, minplayercount=2):
+    def creategame(self, player, minplayercount=2, aicount=0):
         if not isinstance(player, (str, unicode)):
             player = player.playername
+
+        if aicount > minplayercount:
+            raise ValueError, "AIs count exceeds players limit o_O"
         self._maintain()
         self.leavegame(player)
 
@@ -40,7 +44,18 @@ class BuffoonGame(object):
             l = game.cards[-1]
             for card in roundcards:
                 l.append(GameCard(letter=card.letter, score=card.score))
-        
+
+        for __ in xrange(aicount):
+            ainame = None
+            while not ainame or game.hasplayer(ainame):
+                ainame = ai.generate_name()
+            attemptlst = []
+            for roundcards in curdeck:
+                word = ai.roundattempt(roundcards, self.allowedwords)
+                attemptlst.append(word)
+            game.aiattempts[ainame] = attemptlst
+            game.addplayer(ainame)
+
         game.save()
         return game.getstate(player)
 
@@ -135,8 +150,11 @@ class BuffoonGame(object):
 # Game server that stores its state in mongo db instance.
 
 class GameSettings(db.EmbeddedDocument):
-    # how many players will be participating in the game
+    # how many players will participate in the game
     playercount = db.IntField(required=True)
+
+    # how many AIs will participate in the game
+    aicount = db.IntField(required=True, default=lambda: 0)
 
     # how long round will last
     roundseconds = db.IntField(required=True)
@@ -173,7 +191,7 @@ def _replace(query, obj):
 def _atomic(f):
     def atomic_f(self, *args, **kwargs):
         if self.id is None:
-            raise ValueError, "Document must have an id"
+            return f(self, *args, **kwargs)
 
         if not self.version:
             q = Game.objects(id=self.id).update(set__version=1)
@@ -206,8 +224,11 @@ class Game(db.Document):
                                     restseconds=REST_TIME,
                                     choosingseconds=CHOOSING_TIME))
 
-    # players that are currently in the game
+    # players (including ais) that are currently in the game
     players = db.ListField(db.StringField(), default=[])
+
+    # attempts of ai players for all rounds
+    aiattempts = db.MapField(db.ListField(db.StringField()), default=dict)
 
     # current total score of the players, updated after each round
     totalscore = db.MapField(db.IntField(), default={})
@@ -252,6 +273,9 @@ class Game(db.Document):
 
     @_atomic
     def attempt(self, player, word):
+        return self._attempt(player, word)
+
+    def _attempt(self, player, word):
         if not self.isround():
             raise gamecore.WrongStateError
         score = gamecore.wordscore(self._curcards(), word)
@@ -333,6 +357,9 @@ class Game(db.Document):
     def empty(self):
         return not self.players
 
+    def hasplayer(self, player):
+        return player in self.players
+
     def _updatestate(self, now):
         if self.iswaiting():
             if len(self.players) >= self.settings.playercount:
@@ -367,6 +394,11 @@ class Game(db.Document):
 
         if self.firstround_starttime is None:
             self.firstround_starttime = now
+
+        curround = self._curroundindex()
+        for ai, attemptlst in self.aiattempts.iteritems():
+            if len(attemptlst) > curround:
+                self._attempt(ai, attemptlst[curround])
 
     def _finishround(self):
         curround = self._curround()

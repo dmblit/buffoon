@@ -32,8 +32,12 @@
 <form class="form-signin" action="{{url_for('create_game')}}" method="post">
     <h3 class="form-signin-heading">Создать игру</h3>
 
-    <input type="number" min="1" max="20" name="players"
-     class="input-block-level" placeholder="Количество игроков">
+    <input type="number" min="1" max="20" name="humanplayers"
+     class="input-block-level" placeholder="Число живых игроков">
+
+    <!--TODO: нужно делать поле aiplayers опциональным -->
+    <input type="number" min="0" max="20" name="aiplayers"
+     class="input-block-level" placeholder="Число компьютерных игроков">
 
     <button class="btn btn-primary" type="submit">Да!</button>
 </form>
