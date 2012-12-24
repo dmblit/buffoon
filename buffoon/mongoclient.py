@@ -50,7 +50,6 @@ class BuffoonGame(object):
             while not ainame or game.hasplayer(ainame):
                 gender = random.choice(('male', 'female'))
                 ainame = ai.generate_name(gender)
-                print ainame
             attemptlst = []
             cls = {'male': ai.Vasiliy, 'female': ai.Fekla}[gender]
             aiplayer = cls(self.allowedwords)
