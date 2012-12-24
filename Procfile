@@ -1,3 +1,3 @@
-#web: gunicorn buffoon:app
-web: python run
+web: gunicorn buffoon:app
+#web: python run
 
