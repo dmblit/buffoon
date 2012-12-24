@@ -1,0 +1,28 @@
+{% extends "base-game.html" %}
+
+{% block headline %}
+
+    <strong>{{ (state.totalscore | sort(reverse=True, attribute=1))[0][0] }}</strong> </h2>
+{% endblock %}
+
+{% block stage %}
+
+    <table class="table">
+        {% for round in state.history | reverse%}
+            <tr> <th colspan="3"> Раунд {{ round.round }} </th> </tr>
+            {% for attempt in round.usedwords %}
+            <tr>
+                <td> {{ attempt.player }} </td>
+                <td> {{ attempt.word }} </td>
+                <td>
+                    {{ attempt.finalscore }}
+                    {% if attempt.finalscore != attempt.score %}
+                    ({{attempt.score}})
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        {% endfor %}
+    </table>
+
+{% endblock %}

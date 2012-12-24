@@ -339,6 +339,7 @@ class Game(db.Document):
             ret['usedwords'] = [
                 [player, fromattempt(self._curround().chosenattempt(player))]
                 for player in self.players]
+            ret['history'] = self._gethistory()
         else:
             assert False, "Unexpected state: {state}".format(state=self.state)
         return ret
@@ -363,6 +364,17 @@ class Game(db.Document):
 
     def hasplayer(self, player):
         return player in self.players
+
+    def _gethistory(self):
+        res = []
+        for idx, rnd in enumerate(self.rounds):
+            entry = {
+                'round': idx + 1,
+                'cards': self._cards(idx)
+            }
+            entry['usedwords'] = getusedwords(rnd)
+            res.append(entry)
+        return res
 
     def _updatestate(self, now):
         if self.iswaiting():
@@ -465,8 +477,11 @@ class Game(db.Document):
         return len(self.rounds) - 1
 
     def _curcards(self):
+        return self._cards(self._curroundindex())
+
+    def _cards(self, roundindex):
         return [decks.Card(card.letter, score=card.score)
-                for card in self.cards[self._curroundindex()]]
+                for card in self.cards[roundindex]]
 
     def _curattempts(self, player):
         return self._curround().attempts.get(player, [])
@@ -536,7 +551,9 @@ class GameRound(db.EmbeddedDocument):
                 break
         else:
             raise gamecore.BadChoiceError
-
+    
+    def iterchosen(self):
+        return self.chosen.iteritems()
 
 class Attempt(db.EmbeddedDocument):
     word = db.StringField(required=True)
@@ -545,3 +562,23 @@ class Attempt(db.EmbeddedDocument):
 
     def __unicode__(self):
         return u'<Attempt: word: {0} score: {1}>'.format(self.word, self.score)
+
+def tostate(attempt):
+    if isinstance(attempt, Attempt):
+        return {'word': attempt.word, 'score': attempt.score,
+                'finalscore': attempt.finalscore}
+    else:
+        raise ValueError, 'Unknown attempt type'
+
+def getusedwords(rnd):
+    if not isinstance(rnd, GameRound):
+        raise ValueError, 'expected rnd to be GameRound'
+    usedwords = []
+    for player, attempt in rnd.iterchosen():
+        usedwords.append({
+            'player': player,
+            'word': attempt.word,
+            'score': attempt.score,
+            'finalscore': attempt.finalscore
+        })
+    return usedwords

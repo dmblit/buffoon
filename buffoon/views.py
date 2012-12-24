@@ -102,7 +102,7 @@ def game():
         elif state['state'] == 'choosing':
             return flask.render_template('game-choosing.html', state=state)
         elif state['state'] == 'gameover':
-            return flask.render_template('game-rest.html', state=state)
+            return flask.render_template('game-over.html', state=state)
         return flask.render_template('game.html')
     except (GameError, FatalGameError):
         return flask.redirect(flask.url_for('main_page'))
