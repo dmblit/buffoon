@@ -100,6 +100,42 @@ class Vasiliy(object):
         return max(sample,
                    key=lambda w: (gamecore.wordscore(cards, w), -len(w)))
 
+class Vasserman(object):
+    def __init__(self, allowedwords):
+        self.allowedwords = allowedwords
+
+    def roundattempt(self, cards):
+        best, secondbest = -1, -1
+        secondbestlist = []
+        bestlist = []
+        for word in self.allowedwords:
+            score = gamecore.wordscore(cards, word)
+            if score < secondbest:
+                continue
+            elif score == secondbest:
+                secondbestlist.append(word)
+            elif secondbest < score < best:
+                secondbestlist = [word]
+                secondbest = score
+            elif score == best:
+                bestlist.append(word)
+            else:
+                best = score
+                bestlist = [word]
+                secondbest = best
+                secondbestlist = bestlist
+        return random.choice(secondbestlist)
+
+def generate_name_ai(gender):
+    m = {
+        'male': (MALE_FIRST_NAMES, MALE_SECONDS_NAMES, Vasiliy),
+        'female': (FEMALE_FIRST_NAMES, FEMALE_SECOND_NAMES, Fekla),
+        'vasserman': ([u"Анатолий"], [u"Вассерман"], Vasserman),
+    }
+    first, second, cls = m[gender]
+    return random.choice(first) + u" " + random.choice(second), cls
+
+
 def generate_name(gender):
     first, second = {
         'male': (MALE_FIRST_NAMES, MALE_SECONDS_NAMES),
