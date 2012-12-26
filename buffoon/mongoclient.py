@@ -117,6 +117,8 @@ class BuffoonGame(object):
         if not isinstance(player, (str, unicode)):
             player = player.playername
         if word.lower() not in self.allowedwords:
+            logging.warning("[badword] bad word: {0}".format(
+                word.lower().encode('utf-8')))
             raise gamecore.BadWordError(word)
         game = self._getgame(player)
         game.attempt(player, word)
