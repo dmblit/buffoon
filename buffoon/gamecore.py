@@ -8,7 +8,7 @@ import heapq
 from itertools import imap
 import random
 
-def wordscore(cards, word):
+def wordscore(cards, word, allowNegative=False):
     """Calculate the score of the word."""
     cards = list(cards)
     cards.sort(key=lambda x: x[1], reverse=True)
@@ -21,7 +21,7 @@ def wordscore(cards, word):
                 del cards[i]
                 break
     ret -= len(word)
-    if ret < 0:
+    if not allowNegative and ret < 0:
         ret = 0
     return ret
 
@@ -36,7 +36,7 @@ def roundscore(cards, words):
             longest = None
     result = []
     for word in words:
-        score = wordscore(cards, word) - (wordcount[word] - 1)
+        score = wordscore(cards, word, allowNegative=True) - (wordcount[word] - 1)
         if len(word) == longest:
             score += 1
         if score < 0:
