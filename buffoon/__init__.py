@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import logging
 import os
 import flask
 
 from flask.ext.mongoengine import MongoEngine
+
+logging.basicConfig(level=logging.INFO)
 
 app = flask.Flask(__name__)
 app.config['SECRET_KEY'] = 'qwerty'

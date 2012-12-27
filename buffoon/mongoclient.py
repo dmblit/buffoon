@@ -59,6 +59,9 @@ class BuffoonGame(object):
             game.addplayer(ainame)
 
         game.save()
+        logging.info(
+            u"[gameconnect] player '{0}' created a game".format(
+                player).encode('utf-8'))
         return game.getstate(player)
 
     def joingame(self, player, gameid):
@@ -70,6 +73,9 @@ class BuffoonGame(object):
         game = Game.objects(id=gameid).first()
         if game is not None:
             game.addplayer(player)
+            logging.info(
+                u"[gameconnect] player '{0}' joined a game".format(
+                    player).encode('utf-8'))
             return game.getstate(player)
         else:
             raise gamecore.GameConnectionError()
