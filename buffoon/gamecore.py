@@ -4,6 +4,8 @@
 import collections
 import copy
 import decks
+import heapq
+from itertools import imap
 import random
 
 def wordscore(cards, word):
@@ -26,9 +28,17 @@ def wordscore(cards, word):
 def roundscore(cards, words):
     """Calculate all scores of the words."""
     wordcount = collections.Counter(words)
+    if len(words) < 2:
+        longest = None
+    else:
+        longest, secondlongest = heapq.nlargest(2, imap(len, words))
+        if secondlongest == longest:
+            longest = None
     result = []
     for word in words:
         score = wordscore(cards, word) - (wordcount[word] - 1)
+        if len(word) == longest:
+            score += 1
         if score < 0:
             score = 0
         result.append(score)
@@ -70,3 +80,7 @@ class AlreadyInGameError(FatalGameError):
 class GameConnectionError(FatalGameError):
     def __init__(self):
         FatalGameError.__init__(self, u"Невозможно подключиться к выбранной игре.")
+
+if __name__ == '__main__':
+    print roundscore([('c', 3), ('c', 3)], ['cc', 'c'])
+
