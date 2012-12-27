@@ -437,7 +437,7 @@ class Game(db.Document):
 
         for player in self.players:
             chosenattempt = curround.chosenattempt(player)
-            self.totalscore[player] += chosenattempt.score
+            self.totalscore[player] += chosenattempt.finalscore
 
     def _newrest(self):
         self.state = 'rest'
