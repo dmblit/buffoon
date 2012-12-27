@@ -48,11 +48,16 @@ var sendRoundAttempt = function() {
 }
 
 var drawCard = function(canvas, letter, score) {
-    var margin = 10;
-    var font = "Calibri";
+    var fontFamily = "Calibri";
+    var cardSize = Math.min(canvas.height, canvas.width);
+    var margin = cardSize / 10;
+    var letterFontSize = (cardSize * 65 / 100).toFixed();
+    console.log(letterFontSize);
+    var scoreFontSize = (cardSize * 30 / 100).toFixed();
+    console.log(scoreFontSize);
 
     var ctx = canvas.getContext("2d");
-    ctx.font="65px " + font;
+    ctx.font = letterFontSize.toString() + "px " + fontFamily;
     ctx.textBaseline = "middle";
     var dim = ctx.measureText(letter);
     var x = (canvas.width - dim.width) / 2;
@@ -60,7 +65,7 @@ var drawCard = function(canvas, letter, score) {
     ctx.fillText(letter, x, y);
 
     ctx.textBaseline = "alphabetic";
-    ctx.font="30px " + font;
+    ctx.font = scoreFontSize.toString() + "px " + fontFamily;
     score = score.toString();
     dim = ctx.measureText(score);
     x = (canvas.width - dim.width) / 2;
@@ -104,7 +109,6 @@ var chooseWord = function(word) {
     $.getJSON($SCRIPT_ROOT + "/json/choose", {'word': word}, onChoosingReply);
 }
 
-
 var joinGame = function(gameId, successUrl) {
     var onJoinGameReply = function(reply) {
         if (reply.status === 'ok') {
@@ -113,4 +117,3 @@ var joinGame = function(gameId, successUrl) {
     }
     $.getJSON($SCRIPT_ROOT + "/json/joingame", {'gameid': gameId}, onJoinGameReply);
 }
-
