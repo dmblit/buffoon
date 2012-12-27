@@ -20,7 +20,7 @@ class TestGameCore(unittest.TestCase):
     def test_roundscore(self):
         self.assertEqual(
             gamecore.roundscore([], [u"слово", u"слово", u"воробей"]),
-            [(u"слово", 0), (u"слово", 0), (u"воробей", 0)])
+            [0, 0, 0])
         self.assertEqual(
             gamecore.roundscore(
                 [('p', 4), ('a', 3), ('p', 4)],
