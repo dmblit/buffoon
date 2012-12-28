@@ -191,7 +191,7 @@ class Game(object):
             ret['playerstostart'] = self.minplayercount - len(self.players)
         elif self.isround() or self.isrest():
             ret['curround'] = self._curroundindex() + 1
-            ret['secondsremains'] = int(self._secondsremains(now))
+            ret['millisecondsremains'] = int(self._secondsremains(now)) * 1000
             ret['totalscore'] = self._scorelist()
             if self.isround():
                 ret['cards'] = self._getcurcards()

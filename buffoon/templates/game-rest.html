@@ -34,13 +34,4 @@
     </tbody>
 </table>
 
-{% if state.state == 'rest': %}
-    <script type=text/javascript>
-        $(window.setInterval(
-                    function() {
-                    $.getJSON($SCRIPT_ROOT + "/json/getgamestate", onRestReply);
-                    }, 500));
-    </script>
-{%endif%}
-
 {% endblock %}

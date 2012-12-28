@@ -6,13 +6,18 @@
             {% block headline %}
             {% endblock %}
 
-            {% if 'secondsremains' in state %}
+            {% if 'millisecondsremains' in state %}
 
             <div class="progress">
                 <div class="bar" id="timeremainsbar"
-                    style="width: {{ state.secondsremains * 100 / state.secondstotal }}%;">
+                    style="width: {{ state.millisecondsremains * 100 / state.millisecondstotal }}%;">
                 </div>
             </div>
+
+            <script type="text/javascript">
+                TIME_KEEPER.refineTime({{state.millisecondstotal}}, {{state.millisecondsremains}});
+                $(window.setInterval(updateBar, 1000));
+            </script>
 
             {% endif %}
 

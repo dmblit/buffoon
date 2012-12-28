@@ -57,15 +57,6 @@
                     <td> <span id="bestattempt_score"> ?? </span> </td>
                 </tr>
             </table>
-
-
-            <script type=text/javascript>
-                $(window.setInterval(
-                            function() {
-                            $.getJSON($SCRIPT_ROOT + "/json/getgamestate", onRoundReply);
-                            }, 500));
-                        </script>
-
 </div>
 
 {% endblock %}

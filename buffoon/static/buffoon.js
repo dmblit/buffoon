@@ -1,12 +1,8 @@
-var updateTimer = function(totalseconds, secondsremains) {
+var updateBar = function() {
     var timebar = document.getElementById('timeremainsbar');
     if (timebar) {
-        var percents = 100.0 * secondsremains / totalseconds;
-        timebar.style.width = percents.toString() + "%";
-    }
-    var span = $("span#secondsremains");
-    if (span) {
-        span.text(secondsremains);
+        timebar.style.width = TIME_KEEPER.remainPercents().toString() + "%";
+        console.log(timebar.style.width);
     }
 }
 
@@ -15,8 +11,9 @@ var onRoundReply = function(reply) {
         location.reload(true);
     }
 
-    $("span#curround").text(reply.curround);
-    updateTimer(reply.secondstotal, reply.secondsremains);
+    if (reply.millisecondstotal != null && reply.millisecondsremains != null) {
+        TIME_KEEPER.refineTime(reply.millisecondstotal, reply.millisecondsremains);
+    }
     if (reply.bestattempt != null) {
         $("span#bestattempt_word").text(reply.bestattempt.word);
         $("span#bestattempt_score").text(reply.bestattempt.score);
@@ -35,10 +32,8 @@ var onRestReply = function(reply) {
     if (reply.state != 'rest') {
         location.reload(true);
     }
-    updateTimer(reply.secondstotal, reply.secondsremains);
+    TIME_KEEPER.refineTime(reply.secondstotal, reply.millisecondsremains);
 }
-
-var updateRound = onRoundReply;
 
 var sendRoundAttempt = function() {
     var word = $("input[name=word]").val();
@@ -52,9 +47,7 @@ var drawCard = function(canvas, letter, score) {
     var cardSize = Math.min(canvas.height, canvas.width);
     var margin = cardSize / 10;
     var letterFontSize = (cardSize * 65 / 100).toFixed();
-    console.log(letterFontSize);
     var scoreFontSize = (cardSize * 30 / 100).toFixed();
-    console.log(scoreFontSize);
 
     var ctx = canvas.getContext("2d");
     ctx.font = letterFontSize.toString() + "px " + fontFamily;
@@ -71,7 +64,7 @@ var drawCard = function(canvas, letter, score) {
     x = (canvas.width - dim.width) / 2;
     y = canvas.height - margin;
     ctx.fillText(score, x, y);
-};
+}
 
 var onWaitReply = function(reply) {
     if (reply.state != null && reply.state != 'waiting') {
@@ -85,7 +78,7 @@ var onChoosingReply = function(reply) {
     if (reply.state != null && reply.state != 'choosing') {
         location.reload(true);
     }
-    updateTimer(reply.secondstotal, reply.secondsremains);
+    TIME_KEEPER.refineTime(reply.millisecondstotal, reply.millisecondsremains);
     if (reply.status === 'ok' && reply.chosenattempt && reply.chosenattempt.word) {
         $("tr.attempt").removeClass("success");
         $("tr.attempt td").filter(
@@ -117,3 +110,77 @@ var joinGame = function(gameId, successUrl) {
     }
     $.getJSON($SCRIPT_ROOT + "/json/joingame", {'gameid': gameId}, onJoinGameReply);
 }
+
+var reload = function() {
+    location.reload(true);
+}
+
+var TimeKeeper = function() {
+    var that = this;
+    that.endTime = Infinity;
+    that.startTime = -Infinity;
+    that.lastUpdate = null;
+    that.nextUpdate = null;
+    that.reloadId = null;
+    that.refineIds = null;
+
+    that.refineTime = function(millisecondstotal, millisecondsremains, now) {
+        if (typeof now === "undefined") {
+            now = new Date().getTime();
+        }
+        var endTimeGuess = now + millisecondsremains;
+        if (that.endTime > endTimeGuess) {
+            that.endTime = endTimeGuess;
+            that.rescheduleReload(now);
+            that.rescheduleRefine(now);
+        }
+        that.startTime = Math.max(that.startTime, that.endTime - millisecondstotal);
+        that.lastUpdate = now;
+    }
+
+    that.rescheduleReload = function(now) {
+        var newReload = window.setTimeout(function() {location.reload(true);}, that.endTime - now);
+        if (that.reloadId !== null) {
+            window.clearTimeout(that.reloadId);
+        }
+        that.reloadId = newReload;
+    }
+
+    that.rescheduleRefine = function(now) {
+        if (that.refineIds === null) {
+            var REFINE_COUNT = 3;
+            var refineTimeout = (that.endTime - now)  / (REFINE_COUNT + 1);
+            that.refineIds = [];
+            for (var i = 0; i != REFINE_COUNT; ++i) {
+                var tid = window.setTimeout(function() {
+                    $.getJSON($SCRIPT_ROOT + "/json/getgamestate", function(reply) {
+                        that.refineTime(reply.millisecondstotal, reply.millisecondsremains);
+                    });
+                }, refineTimeout * (1 + i));
+                that.refineIds.push(tid);
+            }
+        }
+    }
+
+    that.remainPercents = function(now) {
+        if (typeof now === "undefined") {
+            now = new Date().getTime();
+        }
+
+        if (that.endTime === Infinity) {
+            return 100;
+        } else {
+            return 100 * (that.endTime - now) / (that.endTime - that.startTime);
+        }
+    }
+}
+
+var StateUpdater = function() {
+    var that = this;
+    that.tick = function(now) {
+        if (typeof now === "undefined") {
+            now = new Date().getTime();
+        }
+    }
+}
+var TIME_KEEPER = new TimeKeeper();

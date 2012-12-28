@@ -316,7 +316,7 @@ class Game(db.Document):
             ret['playerstostart'] = self.settings.playercount - len(self.players)
         elif self.isround() or self.isrest() or self.ischoosing():
             ret['curround'] = self._curroundindex() + 1
-            ret['secondsremains'] = int(self._secondsremains(now))
+            ret['millisecondsremains'] = int(self._secondsremains(now) * 1000)
             ret['totalscore'] = self._scorelist()
             if self.isround():
                 ret['cards'] = self._curcards()
@@ -324,14 +324,14 @@ class Game(db.Document):
                 ret['lastattempt'] = fromattempt(lastattempt)
                 bestattempt = self._curround().bestattempt(player)
                 ret['bestattempt'] = fromattempt(bestattempt)
-                ret['secondstotal'] = self.settings.roundseconds
+                ret['millisecondstotal'] = self.settings.roundseconds * 1000
             elif self.isrest():
-                ret['secondstotal'] = self.settings.restseconds
+                ret['millisecondstotal'] = self.settings.restseconds * 1000
                 ret['usedwords'] = [
                     [p, fromattempt(self._curround().chosenattempt(p))]
                     for p in self.players]
             elif self.ischoosing():
-                ret['secondstotal'] = self.settings.choosingseconds
+                ret['millisecondstotal'] = self.settings.choosingseconds * 1000
                 ret['roundattempts'] = [fromattempt(attempt)
                                         for attempt in sorted(self._curattempts(player),
                                                               key=lambda x: x.score,
