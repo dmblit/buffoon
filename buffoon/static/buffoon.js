@@ -27,13 +27,6 @@ var onRoundReply = function(reply) {
     } 
 };
 
-var onRestReply = function(reply) {
-    if (reply.state != 'rest') {
-        location.reload(true);
-    }
-    TIME_KEEPER.refineTime(reply.secondstotal, reply.millisecondsremains);
-}
-
 var sendRoundAttempt = function() {
     var word = $("input[name=word]").val();
     $.getJSON($SCRIPT_ROOT + "/json/attempt", {'word': word}, onRoundReply);
@@ -174,12 +167,4 @@ var TimeKeeper = function() {
     }
 }
 
-var StateUpdater = function() {
-    var that = this;
-    that.tick = function(now) {
-        if (typeof now === "undefined") {
-            now = new Date().getTime();
-        }
-    }
-}
 var TIME_KEEPER = new TimeKeeper();
