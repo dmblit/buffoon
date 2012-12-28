@@ -47,13 +47,17 @@ class TestGameManagement(BuffoonTestCase):
         })
 
     def test_create(self):
-        rv = self.client.get('/action/quickstart')
-        self.assertEqual(rv.status_code, 302)
-        self.assertEqual(dict(rv.header_list)['Location'], 'http://localhost/game')
-
-        rv = self.client.get('/json/getgamestate')
-        status = json.loads(rv.data)
-        self.assertEqual(status['state'], 'waiting')
+        def quickstart(client):
+            rv = client.get('/action/quickstart')
+            self.assertEqual(rv.status_code, 302)
+            self.assertEqual(dict(rv.header_list)['Location'], 'http://localhost/game')
+        rv = quickstart(self.client1)
 
         rv = self.client2.get('/list')
         assert 'client1' in rv.data
+
+        quickstart(self.client2)
+
+        rv = self.client2.get('/game')
+        assert 'client2' in rv.data
+        assert 'Раунд 1' in rv.data
