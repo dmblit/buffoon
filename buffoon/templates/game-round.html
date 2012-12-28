@@ -1,20 +1,5 @@
 {% extends "base-game.html" %}
 
-{% block head %}
-
-<style type="text/css">
-    canvas {
-        border-radius: 5px;
-        -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.05);
-        -moz-box-shadow: 0 1px 2px rgba(0,0,0,.05);
-        -webkit-border-radius: 5px;
-        -moz-border-radius: 5px;
-        box-shadow: 0 1px 2px rgba(0,0,0,.05);
-    }
-</style>
-
-{% endblock %}
-
 {% block headline %}
 <h2>Раунд <span id='curround'> {{state.curround}} </span> </h2>
 {% endblock %}
@@ -22,22 +7,10 @@
 {% block stage %}
 
 <div style="text-align: center">
-    {% for card in state.cards %}
-    <canvas id="card-{{loop.index}}" width="100" height="100" style="border:1px solid #d3d3d3;">
-    default
-    </canvas>
-    {% if loop.index == 4 %}
-    <br>
-    {% endif %}
-    <script type=text/javascript>
-        $(drawCard(document.getElementById("card-{{loop.index}}"), "{{card.letter | upper}}", {{card.score}}));
-    </script>
-    {% endfor %}
-
     <form id="attempt" action="javascript:sendRoundAttempt();" class="form-inline">
         <fieldset>
-            <input type=text name=word>
-            <input type=submit value="Послать">
+            <input type="text" name="word" autofocus="autofocus">
+            <input type="submit" value="Послать">
         </fieldset>
     </form>
     <div class="alert alert-error invisible" id="error">  

@@ -318,8 +318,8 @@ class Game(db.Document):
             ret['curround'] = self._curroundindex() + 1
             ret['millisecondsremains'] = int(self._secondsremains(now) * 1000)
             ret['totalscore'] = self._scorelist()
+            ret['cards'] = self._curcards()
             if self.isround():
-                ret['cards'] = self._curcards()
                 lastattempt = self._curround().lastattempt(player)
                 ret['lastattempt'] = fromattempt(lastattempt)
                 bestattempt = self._curround().bestattempt(player)

@@ -1,4 +1,19 @@
 {% extends "template.html" %}
+
+{% block head %}
+    <style type="text/css">
+        canvas.card {
+            border-radius: 5px;
+            -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.05);
+            -moz-box-shadow: 0 1px 2px rgba(0,0,0,.05);
+            -webkit-border-radius: 5px;
+            -moz-border-radius: 5px;
+            box-shadow: 0 1px 2px rgba(0,0,0,.05);
+            border:1px solid #d3d3d3;
+        }
+    </style>
+{% endblock %}
+
 {% block body %}
 
     <div class="row">
@@ -21,22 +36,37 @@
 
             {% endif %}
 
+            <div style="text-align: center">
+                {% for card in state.cards %}
+                    <canvas id="card-{{loop.index}}" width="100" height="100" class="card">
+                    {{card.letter | upper}} <sub> {{card.score}} </sub>
+                    </canvas>
+                    {% if loop.index == 4 %}
+                    <br>
+                    {% endif %}
+                    <script type=text/javascript>
+                        $(drawCard(document.getElementById("card-{{loop.index}}"), "{{card.letter | upper}}", {{card.score}}));
+                    </script>
+                {% endfor %}
+            </div>
+
             {% block stage %}
             {% endblock %}
         </div>
+
         <div class="span3 pull-right">
             <table class="table"> <tbody>
-                <tr> <th> Игрок </th> <th> Общий Счёт </th> </tr>
-                {% for player,score in state.totalscore %}
-                <tr>
-                    <td>
-                        {{ player }}
-                    </td>
-                    <td>
-                        {{ score }}
-                    </td>
-                </tr>
-                {% endfor %}
+                    <tr> <th> Игрок </th> <th> Общий Счёт </th> </tr>
+                    {% for player,score in state.totalscore %}
+                    <tr>
+                        <td>
+                            {{ player }}
+                        </td>
+                        <td>
+                            {{ score }}
+                        </td>
+                    </tr>
+                    {% endfor %}
             </tbody> </table>
         </div>
     </div>
