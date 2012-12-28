@@ -2,7 +2,6 @@ var updateBar = function() {
     var timebar = document.getElementById('timeremainsbar');
     if (timebar) {
         timebar.style.width = TIME_KEEPER.remainPercents().toString() + "%";
-        console.log(timebar.style.width);
     }
 }
 
