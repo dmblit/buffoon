@@ -13,7 +13,7 @@ app = flask.Flask(__name__)
 app.config['SECRET_KEY'] = 'qwerty'
 app.config['MONGODB_SETTINGS'] = {
     'db': 'buffoon_game',
-    'host': os.environ.get('MONGOHQ_URL', 'mongodb://localhost:27017/buffoon_game')
+    'host': os.environ.get('MONGOHQ_URL', 'localhost'),
 }
 
 db = MongoEngine(app)

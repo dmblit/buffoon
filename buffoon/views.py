@@ -65,12 +65,16 @@ def listofgames():
 
 @app.route('/action/quickstart')
 def quickstart_game():
+    if 'playerid' not in flask.session:
+        return flask.redirect(flask.url_for('main_page'))
     gameserver.joinorcreategame(getplayer())
     return flask.redirect(flask.url_for('game'))
 
 
 @app.route('/action/create', methods=['GET', 'POST'])
 def create_game():
+    if 'playerid' not in flask.session:
+        return flask.redirect(flask.url_for('main_page'))
     try:
         humanplayers = int(flask.request.values.get('humanplayers', 1))
     except ValueError:
@@ -131,6 +135,8 @@ def joingame():
 
 @app.route('/json/attempt')
 def attempt():
+    if 'playerid' not in flask.session:
+        return flask.redirect(flask.url_for('main_page'))
     if 'word' not in flask.request.args:
         return flask.jsonify({'reason': 'no word'})
     word = flask.request.args['word']
@@ -145,6 +151,8 @@ def attempt():
 
 @app.route('/json/choose')
 def choose():
+    if 'playerid' not in flask.session:
+        return flask.redirect(flask.url_for('main_page'))
     if 'word' not in flask.request.args:
         return flask.jsonify({'reason': 'no word'})
     word = flask.request.args['word']
