@@ -103,6 +103,14 @@ var joinGame = function(gameId, successUrl) {
     $.getJSON($SCRIPT_ROOT + "/json/joingame", {'gameid': gameId}, onJoinGameReply);
 }
 
+var startGame = function() {
+    $.getJSON($SCRIPT_ROOT + "/json/startgame", function(reply) {
+        if (reply.status === 'ok') {
+            reload();
+        }
+    });
+}
+
 var reload = function() {
     location.reload(true);
 }

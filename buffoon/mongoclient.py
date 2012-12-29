@@ -35,7 +35,7 @@ class BuffoonGame(object):
 
         game = Game()
         game.settings.playercount = minplayercount
-        game.addplayer(player)
+        game.addplayer(player, creator=True)
 
         game.cards =  []
         curdeck = self.deckfactory()
@@ -112,6 +112,14 @@ class BuffoonGame(object):
             game.removeplayer(player)
         return {}
 
+    def startgame(self, player):
+        if not isinstance(player, (str, unicode)):
+            player = player.playername
+        game = self._getgame(player)
+        game.startgame(player)
+        game.updatestate()
+        return game.getstate(player)
+
     def getstate(self, player):
         if not isinstance(player, (str, unicode)):
             player = player.playername
@@ -138,6 +146,7 @@ class BuffoonGame(object):
         game.choose(player, word)
         game.updatestate()
         return game.getstate(player)
+
 
     @staticmethod
     def _getgame(player):
@@ -226,6 +235,8 @@ class Game(db.Document):
 
     firstround_starttime = db.DateTimeField()
 
+    started = db.BooleanField(default=False)
+
     # settings of the game set at game start
     settings = db.EmbeddedDocumentField(
         'GameSettings', required=True,
@@ -239,6 +250,9 @@ class Game(db.Document):
 
     # human players
     humanplayers  = db.ListField(db.StringField(), default=[])
+
+    # admin
+    creator = db.StringField()
 
     # attempts of ai players for all rounds
     aiattempts = db.MapField(db.ListField(db.StringField()), default=dict)
@@ -263,7 +277,7 @@ class Game(db.Document):
             ', '.join(self.players), self.state)
 
     @_atomic
-    def addplayer(self, player, human=True):
+    def addplayer(self, player, human=True, creator=False):
         if len(self.players) >= self.settings.playercount:
             raise gamecore.GameConnectionError()
         if not self.iswaiting():
@@ -272,6 +286,8 @@ class Game(db.Document):
             self.players.append(player)
             if human:
                 self.humanplayers.append(player)
+            if creator:
+                self.creator = player
 
     @_atomic
     def removeplayer(self, player):
@@ -281,6 +297,8 @@ class Game(db.Document):
             self.humanplayers.remove(player)
         except ValueError:
             pass
+        if self.creator == player:
+            self.creator = None
 
     @_atomic
     def choose(self, player, word):
@@ -305,6 +323,14 @@ class Game(db.Document):
         while self._updatestate(now):
             pass
 
+    @_atomic
+    def startgame(self, player):
+        if not self.iswaiting():
+            raise gamecore.WrongStateError
+        if not self.creator == player:
+            raise gamecore.WrongStateError
+        self.started = True
+
     def getstate(self, player, now=None):
         def fromattempt(attempt):
             return {'word': attempt.word, 'score': attempt.score,
@@ -321,6 +347,7 @@ class Game(db.Document):
 
         if self.iswaiting():
             ret['playerstostart'] = self.settings.playercount - len(self.players)
+            ret['iscreator'] = self.creator == player
         elif self.isround() or self.isrest() or self.ischoosing():
             ret['curround'] = self._curroundindex() + 1
             ret['millisecondsremains'] = int(self._secondsremains(now) * 1000)
@@ -391,7 +418,7 @@ class Game(db.Document):
 
     def _updatestate(self, now):
         if self.iswaiting():
-            if len(self.players) >= self.settings.playercount:
+            if len(self.players) >= self.settings.playercount or self.started:
                 self._newround(now)
                 return True
         elif self.isround():

@@ -18,6 +18,15 @@
             <tr> <td> - </tr> </td>
         {% endfor %}
     </table>
+    {% if state.iscreator %}
+        <div style="text-align: right">
+            <form action="javascript:startGame();">
+                <fieldset>
+                    <input type="submit" value="Начать">
+                </fieldset>
+            </form>
+        </div>
+    {% endif %}
     <script type=text/javascript>
         $(window.setInterval(
                     function() {

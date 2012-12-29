@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+
+import flask
+
 import buffoon
 
 class BuffoonTestCase(unittest.TestCase):
@@ -81,3 +84,32 @@ class TestGameManagement(BuffoonTestCase):
         rv = self.client2.get('/list')
         assert 'client1' in rv.data
         self.assertEqual(rv.data.count('Подключиться'), 1)
+
+    def test_start_game(self):
+        rv = self.client1.post('/action/create', data = {
+            'humanplayers': 3,
+        })
+        self.assertEqual(rv.status_code, 302)
+        self.assertEqual(dict(rv.header_list)['Location'], 'http://localhost/game')
+
+        rv = self.client1.get('/game')
+        assert 'Начать' in rv.data
+
+        rv = self.client2.get('/action/quickstart')
+        self.assertEqual(rv.status_code, 302)
+        self.assertEqual(dict(rv.header_list)['Location'], 'http://localhost/game')
+
+        rv = self.client2.get('/game')
+        assert 'Начать' not in rv.data
+
+        rv = self.client2.post('/json/startgame')
+        self.assertNotEqual(flask.json.loads(rv.data)['status'], 'ok')
+
+        rv = self.client1.post('/json/startgame')
+        self.assertEqual(flask.json.loads(rv.data)['status'], 'ok')
+
+        for cl in [self.client1, self.client2]:
+            rv = self.client1.get('/game')
+            assert 'Раунд 1' in rv.data
+
+

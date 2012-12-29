@@ -78,7 +78,7 @@ def create_game():
     try:
         humanplayers = int(flask.request.values.get('humanplayers', 1))
     except ValueError:
-        humanplayers = 0
+        humanplayers = 1
     try:
         aiplayers = int(flask.request.values.get('aiplayers', 0))
     except ValueError:
@@ -132,6 +132,18 @@ def joingame():
     except (gamecore.GameError, gamecore.FatalGameError) as e:
         return flask.jsonify({'status': 'error',
                               'reason': unicode(e)})
+
+@app.route('/json/startgame', methods=['GET', 'POST'])
+def startgame():
+    if 'playerid' not in flask.session:
+        return flask.redirect(flask.url_for('main_page'))
+    try:
+        ret = gameserver.startgame(getplayer())
+        return flask.jsonify(status='ok', **ret)
+    except GameError as e:
+        return flask.jsonify(
+            status='error',
+            reason=unicode(e))
 
 @app.route('/json/attempt')
 def attempt():
