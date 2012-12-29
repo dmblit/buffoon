@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import json
 import unittest
 import buffoon
 
@@ -61,3 +60,24 @@ class TestGameManagement(BuffoonTestCase):
         rv = self.client2.get('/game')
         assert 'client2' in rv.data
         assert 'Раунд 1' in rv.data
+
+    def test_game_removal(self):
+        def creategame(client):
+            rv = client.post('/action/create', data = {
+                'humanplayers': 2,
+                'aiplayers': 1,
+            })
+            self.assertEqual(rv.status_code, 302)
+            self.assertEqual(dict(rv.header_list)['Location'], 'http://localhost/game')
+
+        creategame(self.client1)
+
+        rv = self.client2.get('/list')
+        assert 'client1' in rv.data
+        self.assertEqual(rv.data.count('Подключиться'), 1)
+
+        creategame(self.client1)
+
+        rv = self.client2.get('/list')
+        assert 'client1' in rv.data
+        self.assertEqual(rv.data.count('Подключиться'), 1)

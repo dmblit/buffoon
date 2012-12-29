@@ -35,7 +35,7 @@ class BuffoonGame(object):
 
         game = Game()
         game.settings.playercount = minplayercount
-        game.players.append(player)
+        game.addplayer(player)
 
         game.cards =  []
         curdeck = self.deckfactory()
@@ -56,7 +56,7 @@ class BuffoonGame(object):
                 word = aiplayer.roundattempt(roundcards)
                 attemptlst.append(word)
             game.aiattempts[ainame] = attemptlst
-            game.addplayer(ainame)
+            game.addplayer(ainame, human=False)
 
         game.save()
         logging.info(
@@ -149,7 +149,7 @@ class BuffoonGame(object):
     def _maintain(self, now=None):
         if now is None:
             now = datetime.datetime.now()
-        Game.objects(Q(players__size=0) | Q(state='gameover')).delete()
+        Game.objects(Q(humanplayers__size=0) | Q(state='gameover')).delete()
         keepthreshold = now - self.maxidletime
         Game.objects(Q(state='waiting') &
                      Q(createtime__lte=keepthreshold)).delete()
@@ -237,6 +237,9 @@ class Game(db.Document):
     # players (including ais) that are currently in the game
     players = db.ListField(db.StringField(), default=[])
 
+    # human players
+    humanplayers  = db.ListField(db.StringField(), default=[])
+
     # attempts of ai players for all rounds
     aiattempts = db.MapField(db.ListField(db.StringField()), default=dict)
 
@@ -260,18 +263,22 @@ class Game(db.Document):
             ', '.join(self.players), self.state)
 
     @_atomic
-    def addplayer(self, player):
+    def addplayer(self, player, human=True):
         if len(self.players) >= self.settings.playercount:
             raise gamecore.GameConnectionError()
         if not self.iswaiting():
             raise gamecore.GameConnectionError()
         if player not in self.players:
             self.players.append(player)
+            if human:
+                self.humanplayers.append(player)
 
     @_atomic
     def removeplayer(self, player):
         try:
             self.players.remove(player)
+            # if we don't have player in players, we don't have it in human player
+            self.humanplayers.remove(player)
         except ValueError:
             pass
 
