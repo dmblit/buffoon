@@ -11,8 +11,8 @@ from buffoon import app
 import gamecore
 from gamecore import GameError, FatalGameError
 
-curdir = os.path.dirname(__file__)
-with open(os.path.join(curdir, 'data', 'nouns.txt')) as inf:
+PROJECT_ROOT = os.path.dirname(__file__)
+with open(os.path.join(PROJECT_ROOT, 'data', 'nouns.txt')) as inf:
     NOUNS = frozenset(
         line.strip().decode('utf-8') for line in inf)
 
@@ -182,3 +182,8 @@ def create_game_form():
     if 'playerid' not in flask.session:
         return flask.redirect(flask.url_for('main_page'))
     return flask.render_template('create-game-form.html')
+
+# Ugly, but I don't understand better way for now :(
+@app.route('/robots.txt')
+def robots_txt():
+    return flask.send_from_directory(os.path.join(PROJECT_ROOT, 'public'), 'robots.txt')
