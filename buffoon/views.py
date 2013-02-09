@@ -187,3 +187,6 @@ def create_game_form():
 @app.route('/robots.txt')
 def robots_txt():
     return flask.send_from_directory(os.path.join(PROJECT_ROOT, 'public'), 'robots.txt')
+@app.route('/favicon.ico')
+def favicon():
+    return flask.send_from_directory(os.path.join(PROJECT_ROOT, 'public'), 'favicon.png')
