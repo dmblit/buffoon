@@ -120,10 +120,10 @@ class Vasserman(object):
             elif score == best:
                 bestlist.append(word)
             else:
-                best = score
-                bestlist = [word]
                 secondbest = best
                 secondbestlist = bestlist
+                best = score
+                bestlist = [word]                
         return random.choice(secondbestlist)
 
 def generate_name_ai(gender):
